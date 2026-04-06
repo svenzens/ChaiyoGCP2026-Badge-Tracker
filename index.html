@@ -435,8 +435,8 @@ function renderDashboard(profile){
 
 function renderSwag(ct,cs){
   const c=$('swag-cards');c.innerHTML='';
-  [{label:'Tier 1 — Top Swag', prizes:['👕 T-shirt','🎉 Stickers'],rT:15,rS:8},
-   {label:'Tier 2 — Base Swag',prizes:['👕 T-shirt','💻 Laptop Sleeve','🎉 Stickers'],rT:8,rS:5}
+  [{label:'Tier 2 — Base Swag',prizes:['👕 T-shirt','💻 Laptop Sleeve','🎉 Stickers'],rT:8,rS:5},
+   {label:'Tier 1 — Top Swag', prizes:['👕 T-shirt','🎉 Stickers'],rT:15,rS:8}
   ].forEach(t=>{
     const tM=ct>=t.rT,sM=cs>=t.rS,ok=tM&&sM;
     const pT=Math.min(100,Math.round(ct/t.rT*100));
