@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>#ChaiyoGCP Badge Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;--accent:#4f8ef7;--accent2:#34d399;--accent3:#f59e0b;--accent4:#a78bfa;--text:#e2e8f0;--text-dim:#64748b;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,142,247,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(79,142,247,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .wrapper{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px 80px;}
+
+  header{padding:36px 0 28px;border-bottom:1px solid var(--border);margin-bottom:32px;}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-icon{width:46px;height:46px;background:linear-gradient(135deg,#4f8ef7,#a78bfa);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+  h1{font-family:'Space Mono',monospace;font-size:clamp(16px,3vw,24px);letter-spacing:-.5px;}
+  h1 span{color:var(--accent);}
+  .subtitle{font-size:12px;color:var(--text-dim);font-family:'Space Mono',monospace;margin-top:3px;}
+
+  /* ── Input Box ── */
+  .input-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 32px;margin-bottom:28px;position:relative;overflow:hidden;}
+  .input-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent4));}
+  .box-label{font-size:14px;font-weight:700;margin-bottom:6px;}
+  .box-hint{font-size:12px;color:var(--text-dim);margin-bottom:16px;line-height:1.7;}
+  .box-hint code{background:rgba(79,142,247,.12);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:11px;font-family:'Space Mono',monospace;}
+  .box-hint strong{color:var(--text);}
+
+  /* Steps */
+  .steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+  .step{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+  .step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;font-family:'Space Mono',monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .step-text{font-size:13px;line-height:1.6;color:var(--text);}
+  .step-text a{color:var(--accent);text-decoration:none;}
+  .step-text a:hover{text-decoration:underline;}
+  .step-text kbd{background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;font-family:'Space Mono',monospace;color:var(--text-dim);}
+
+  textarea{width:100%;height:130px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:13px;font-family:'Space Mono',monospace;outline:none;resize:vertical;transition:border-color .2s;line-height:1.5;}
+  textarea:focus{border-color:var(--accent);}
+  textarea::placeholder{color:var(--text-dim);}
+  .btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+  .parse-btn{padding:11px 26px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+  .parse-btn:hover{background:#3d7ef0;transform:translateY(-1px);}
+  .parse-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .clear-btn{padding:11px 18px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text-dim);font-size:14px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+  .clear-btn:hover{border-color:var(--text-dim);color:var(--text);}
+  .error-msg{margin-top:10px;font-size:13px;color:#f87171;font-family:'Space Mono',monospace;display:none;}
+  .error-msg.show{display:block;}
+
+  /* ── Profile Card ── */
+  .profile-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:24px;display:none;align-items:center;gap:18px;flex-wrap:wrap;}
+  .profile-card.show{display:flex;}
+  .pav{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent4));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .pname{font-size:17px;font-weight:700;}
+  .pmeta{font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;margin-top:3px;}
+  .reset-btn{margin-left:auto;padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;transition:all .2s;white-space:nowrap;}
+  .reset-btn:hover{border-color:#f87171;color:#f87171;}
+
+  /* ── Stats ── */
+  .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .stat-card.blue::before{background:var(--accent);}
+  .stat-card.green::before{background:var(--accent2);}
+  .stat-card.yellow::before{background:var(--accent3);}
+  .stat-card.purple::before{background:var(--accent4);}
+  .slabel{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-family:'Space Mono',monospace;margin-bottom:5px;}
+  .sval{font-size:26px;font-weight:700;font-family:'Space Mono',monospace;}
+  .stat-card.blue .sval{color:var(--accent);}
+  .stat-card.green .sval{color:var(--accent2);}
+  .stat-card.yellow .sval{color:var(--accent3);}
+  .stat-card.purple .sval{color:var(--accent4);}
+
+  /* ── Progress ── */
+  .gp{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .gp-label{font-size:12px;color:var(--text-dim);white-space:nowrap;font-family:'Space Mono',monospace;}
+  .gp-track{flex:1;min-width:140px;height:8px;background:var(--border);border-radius:99px;overflow:hidden;}
+  .gp-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .8s cubic-bezier(.4,0,.2,1);}
+  .gp-pct{font-size:16px;font-weight:700;font-family:'Space Mono',monospace;color:var(--accent2);white-space:nowrap;}
+
+  /* ── Swag ── */
+  .sec-head{font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .sec-head::after{content:'';flex:1;height:1px;background:var(--border);}
+  .swag-section{margin-bottom:28px;}
+  .swag-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
+  .swag-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .3s;}
+  .swag-card.unlocked{border-color:rgba(52,211,153,.5);background:linear-gradient(135deg,rgba(52,211,153,.06),var(--surface));}
+  @keyframes sg{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}50%{box-shadow:0 0 18px 3px rgba(52,211,153,.12)}}
+  .swag-card.unlocked{animation:sg 4s ease-in-out infinite;}
+  .swag-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .spill{font-size:10px;font-family:'Space Mono',monospace;padding:3px 9px;border-radius:99px;text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+  .swag-card.unlocked .spill{background:rgba(52,211,153,.15);color:var(--accent2);border:1px solid rgba(52,211,153,.3);}
+  .swag-card.locked .spill{background:rgba(255,255,255,.05);color:var(--text-dim);border:1px solid var(--border);}
+  .prizes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .ptag{font-size:12px;font-weight:500;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid var(--border);}
+  .swag-card.unlocked .ptag{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.2);color:#a7f3d0;}
+  .reqs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .rbox{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:9px 11px;}
+  .rlabel{font-size:9px;color:var(--text-dim);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+  .rnums{display:flex;align-items:baseline;gap:3px;}
+  .rcur{font-size:19px;font-weight:700;font-family:'Space Mono',monospace;}
+  .rsep,.rtgt{font-size:12px;color:var(--text-dim);font-family:'Space Mono',monospace;}
+  .rbox.met .rcur{color:var(--accent2);}
+  .rbox.unmet .rcur{color:var(--accent3);}
+  .mbar{height:3px;background:var(--border);border-radius:99px;margin-top:5px;overflow:hidden;}
+  .mfill{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+  .rbox.met .mfill{background:var(--accent2);}
+  .rbox.unmet .mfill{background:var(--accent3);}
+  .snote{font-size:10px;padding:6px 9px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:6px;color:#fcd34d;line-height:1.5;margin-bottom:8px;}
+  .sdead{font-size:10px;color:var(--text-dim);font-family:'Space Mono',monospace;display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--border);}
+  .bdot{width:5px;height:5px;border-radius:50%;background:var(--accent3);flex-shrink:0;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .bdot{animation:blink 1.5s ease-in-out infinite;}
+
+  /* ── Filters ── */
+  .filters{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+  .fbtn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);font-size:12px;font-family:'Space Mono',monospace;cursor:pointer;transition:all .2s;}
+  .fbtn:hover,.fbtn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* ── Badge sections ── */
+  .section{margin-bottom:36px;}
+  .shdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .stype{font-size:10px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:1px;}
+  .stype.skill{background:rgba(79,142,247,.15);color:var(--accent);}
+  .stype.regular{background:rgba(167,139,250,.15);color:var(--accent4);}
+  .stitle{font-size:13px;font-weight:500;}
+  .scnt{margin-left:auto;font-size:11px;color:var(--text-dim);font-family:'Space Mono',monospace;}
+  .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px;}
+  .bitem{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:11px;transition:all .2s;position:relative;overflow:hidden;}
+  .bitem:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .bitem.earned{border-color:rgba(52,211,153,.3);background:linear-gradient(135deg,rgba(52,211,153,.04),var(--surface));}
+  .bitem.chaiyo::before{content:'★';position:absolute;top:6px;right:8px;font-size:9px;color:var(--accent3);opacity:.85;}
+  .bitem.earned::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);}
+  .bchk{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;transition:all .2s;}
+  .bitem.earned .bchk{background:var(--accent2);border-color:var(--accent2);color:#0a0f1e;}
+  .binfo{flex:1;min-width:0;}
+  .bname{font-size:12px;font-weight:500;line-height:1.4;}
+  .bitem.earned .bname{color:#a7f3d0;}
+  .bdate{font-size:10px;color:var(--text-dim);font-family:'Space Mono',monospace;margin-top:2px;}
+  .bitem.earned .bdate{color:var(--accent2);opacity:.75;}
+  .bitem.hidden,.section.hidden{display:none;}
+  @keyframes ep{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}50%{box-shadow:0 0 10px 2px rgba(52,211,153,.1)}}
+  .bitem.earned{animation:ep 3s ease-in-out infinite;}
+  .bitem.earned:hover{animation:none;}
+  #dashboard{display:none;}
+  #dashboard.show{display:block;}
+  @media(max-width:600px){.bgrid,.swag-cards{grid-template-columns:1fr;}.stats-bar{grid-template-columns:repeat(2,1fr);}.btn-row{flex-direction:column;}.parse-btn,.clear-btn{width:100%;}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">🏅</div>
+    <div>
+      <h1><span>#ChaiyoGCP</span> Badge Tracker</h1>
+      <div class="subtitle">Season 6 · Mar 19 – Apr 12, 2026</div>
+    </div>
+  </div>
+</header>
+
+<!-- Input Box -->
+<div class="input-box" id="inputBox">
+  <div class="box-label">📋 วิธีดู badge ของคุณ</div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        เปิด <a href="https://www.skills.google" target="_blank">skills.google</a> แล้วไปที่ profile ของคุณ
+        (หรือเปิด public profile link)
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        กด <kbd>Ctrl+A</kbd> เพื่อเลือกทั้งหมด แล้ว <kbd>Ctrl+C</kbd> เพื่อ copy<br>
+        <span style="color:var(--text-dim);font-size:11px;">หรือ คลิกขวา → View Page Source → Ctrl+A → Ctrl+C</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Paste ลงในช่องด้านล่าง แล้วกด <strong>Analyze</strong></div>
+    </div>
+  </div>
+
+  <textarea id="htmlInput" placeholder="Paste HTML หรือ page content ของ Google Skills profile ที่นี่...&#10;&#10;ตัวอย่าง: วาง source code ทั้งหมดจากหน้า profile"></textarea>
+
+  <div class="btn-row">
+    <button class="parse-btn" onclick="parseInput()">🔍 Analyze Profile</button>
+    <button class="clear-btn" onclick="clearInput()">✕ Clear</button>
+  </div>
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="profile-card" id="profileCard">
+    <div class="pav">👤</div>
+    <div>
+      <div class="pname" id="pname">—</div>
+      <div class="pmeta" id="pmeta">—</div>
+    </div>
+    <button class="reset-btn" onclick="resetDashboard()">↩ Load another</button>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card blue"><div class="slabel">ChaiyoGCP List</div><div class="sval" id="st-total">0</div></div>
+    <div class="stat-card green"><div class="slabel">Earned ✅</div><div class="sval" id="st-earned">0</div></div>
+    <div class="stat-card yellow"><div class="slabel">Remaining</div><div class="sval" id="st-rem">0</div></div>
+    <div class="stat-card purple"><div class="slabel">Skill Badges ★</div><div class="sval" id="st-skill">0</div></div>
+  </div>
+
+  <div class="gp">
+    <span class="gp-label">ChaiyoGCP Progress</span>
+    <div class="gp-track"><div class="gp-fill" id="gp-fill" style="width:0%"></div></div>
+    <span class="gp-pct" id="gp-pct">0%</span>
+  </div>
+
+  <div class="swag-section">
+    <div class="sec-head">🎁 Swag Tracker</div>
+    <div class="swag-cards" id="swag-cards"></div>
+  </div>
+
+  <div class="filters">
+    <button class="fbtn active" onclick="filterBadges('all',event)">All</button>
+    <button class="fbtn" onclick="filterBadges('earned',event)">✅ Earned</button>
+    <button class="fbtn" onclick="filterBadges('todo',event)">⏳ To Do</button>
+    <button class="fbtn" onclick="filterBadges('skill',event)">Skill Badges</button>
+    <button class="fbtn" onclick="filterBadges('regular',event)">Regular Badges</button>
+    <button class="fbtn" onclick="filterBadges('chaiyo',event)">★ ChaiyoGCP Only</button>
+  </div>
+
+  <div id="sections"></div>
+</div>
+
+</div>
+<script>
+// ── ChaiyoGCP S6 Data ────────────────────────────────────────────────────────
+const CHAIYO_START = new Date("2026-03-19T00:01:00+07:00");
+const CHAIYO_END   = new Date("2026-04-12T23:59:00+07:00");
+
+const chaiyoSkills = new Set([
+  "Automate Data Capture at Scale with Document AI","Cloud Run Functions: 3 Ways",
+  "Configure Service Accounts and IAM Roles for Google Cloud","Create ML Models with BigQuery ML",
+  "Deploy Kubernetes Applications on Google Cloud","Deploy Multi-Agent Architectures",
+  "Develop Gen AI Apps with Gemini and Streamlit","Develop Serverless Applications on Cloud Run",
+  "Engineer Data for Predictive Modeling with BigQuery ML","Enhance Gemini Model Capabilities",
+  "Implement Cloud Security Fundamentals on Google Cloud","Implement Multimodal Vector Search with BigQuery",
+  "Kickstarting Application Development with Gemini Code Assist","Manage Kubernetes in Google Cloud",
+  "Mitigate Threats and Vulnerabilities with Security Command Center",
+  "Monitor and Log with Google Cloud Observability","Monitoring in Google Cloud",
+  "Perform Predictive Data Analysis in BigQuery","Prompt Design in Vertex AI",
+  "The Basics of Google Cloud Compute","Use APIs to Work with Cloud Storage",
+]);
+const chaiyoRegular = new Set([
+  "Agent Assist and its Gen AI Capabilities","AI Boost Bites: Automate tasks with Gemini and Apps Script",
+  "Build AI Agents with Enterprise Databases","Build Generative AI Agents with Vertex AI and Flutter",
+  "Build intelligent agents with Agent Development Kit (ADK)","Create Agents with Generative Playbooks",
+  "Create Embeddings, Vector Search, and RAG with BigQuery",
+  "Deploy Multi-Agent Systems with Agent Development Kit (ADK) and Agent Engine",
+  "Gemini for Application Developers","Gemini for Cloud Architects","Gemini for DevOps Engineers",
+  "Gemini for Network Engineers","Gemini for Security Engineers",
+  "Google Cloud Computing Foundations: Cloud Computing Fundamentals",
+  "Introduction to Security in the World of AI","Model Armor: Securing AI Deployments",
+  "Streamline App Development with Gemini Code Assist","Vector Search and Embeddings",
+  "Vertex AI Search for Commerce",
+]);
+const allChaiyo = new Set([...chaiyoSkills,...chaiyoRegular]);
+
+const badgeData = [
+  {type:'skill',cat:'Generative AI & Agents',badges:['Deploy Multi-Agent Architectures','Develop Gen AI Apps with Gemini and Streamlit','Enhance Gemini Model Capabilities','Kickstarting Application Development with Gemini Code Assist','Prompt Design in Vertex AI']},
+  {type:'skill',cat:'Data Engineering & Machine Learning',badges:['Automate Data Capture at Scale with Document AI','Create ML Models with BigQuery ML','Engineer Data for Predictive Modeling with BigQuery ML','Implement Multimodal Vector Search with BigQuery','Perform Predictive Data Analysis in BigQuery']},
+  {type:'skill',cat:'Security & Governance',badges:['Configure Service Accounts and IAM Roles for Google Cloud','Implement Cloud Security Fundamentals on Google Cloud','Mitigate Threats and Vulnerabilities with Security Command Center','Monitor and Log with Google Cloud Observability','Monitoring in Google Cloud','Use APIs to Work with Cloud Storage']},
+  {type:'skill',cat:'Cloud Infrastructure & Applications',badges:['Cloud Run Functions: 3 Ways','Deploy Kubernetes Applications on Google Cloud','Develop Serverless Applications on Cloud Run','Manage Kubernetes in Google Cloud','The Basics of Google Cloud Compute']},
+  {type:'regular',cat:'AI Agent Development',badges:['Build AI Agents with Enterprise Databases','Build Generative AI Agents with Vertex AI and Flutter','Build intelligent agents with Agent Development Kit (ADK)','Create Embeddings, Vector Search, and RAG with BigQuery','Deploy Multi-Agent Systems with Agent Development Kit (ADK) and Agent Engine','Vector Search and Embeddings']},
+  {type:'regular',cat:'Gemini',badges:['Gemini for Application Developers','Gemini for Cloud Architects','Gemini for DevOps Engineers','Gemini for Network Engineers','Gemini for Security Engineers']},
+  {type:'regular',cat:'Applied AI',badges:['Agent Assist and its Gen AI Capabilities','Create Agents with Generative Playbooks','Vertex AI Search for Commerce']},
+  {type:'regular',cat:'Application Development',badges:['AI Boost Bites: Automate tasks with Gemini and Apps Script','Google Cloud Computing Foundations: Cloud Computing Fundamentals','Streamline App Development with Gemini Code Assist']},
+  {type:'regular',cat:'AI Security & Governance',badges:['Introduction to Security in the World of AI','Model Armor: Securing AI Deployments']},
+];
+
+let earnedMap = {};
+const $=id=>document.getElementById(id);
+
+function parseDate(str){
+  if(!str) return null;
+  const d=new Date(str.replace(/\s?(EDT|EST|PDT|PST|GMT\S*)/gi,'').trim());
+  return isNaN(d)?null:d;
+}
+function inWindow(s){const d=parseDate(s);return d&&d>=CHAIYO_START&&d<=CHAIYO_END;}
+
+// ── Parser ───────────────────────────────────────────────────────────────────
+function parseHTML(raw) {
+  // Name
+  let name='Unknown';
+  const titleM=raw.match(/<title>([^<|]+)/i);
+  if(titleM) name=titleM[1].replace(/\|\s*Google Skills/i,'').trim();
+  const h1M=raw.match(/<h1[^>]*>\s*([\w\s\-''.]{2,80})\s*<\/h1>/i);
+  if(h1M) name=h1M[1].trim();
+
+  // League + points + since
+  let league='';
+  for(const l of ['Diamond','Platinum','Gold','Silver','Bronze']){if(raw.includes(l+' League')){league=l;break;}}
+  const ptM=raw.match(/([\d,]+)\s*points/i);
+  const points=ptM?ptM[1]:'';
+  const sinceM=raw.match(/Member since (\d{4})/i);
+  const memberSince=sinceM?sinceM[1]:'';
+
+  // Badges: pair img alt with nearest Earned date
+  const badges=[], seen=new Set();
+  const alts=[];
+  const altRe=/alt="([^"]{5,160})"/gi;
+  let m;
+  while((m=altRe.exec(raw))!==null){
+    const a=m[1].trim();
+    if(/google|logo|icon|league|avatar|profile|diamond|platinum|gold|silver|bronze|banner|qwiklab|load/i.test(a)) continue;
+    if(a.length<5||a.length>160) continue;
+    alts.push({name:a,pos:m.index});
+  }
+
+  const dateRe=/Earned\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}(?:\s+(?:EDT|EST|PDT|PST|UTC|GMT[^\s<]*))?/gi;
+  while((m=dateRe.exec(raw))!==null){
+    const dateStr=m[0].replace(/^Earned\s+/i,'').trim();
+    let best=null,bestDist=Infinity;
+    alts.forEach(a=>{
+      const dist=m.index-a.pos;
+      if(dist>0&&dist<bestDist&&dist<10000){bestDist=dist;best=a;}
+    });
+    if(best&&!seen.has(best.name)){
+      seen.add(best.name);
+      badges.push({
+        name:best.name.replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim(),
+        date:dateStr
+      });
+    }
+  }
+
+  // Fallback: plain text "Badge Name\nEarned Month D, YYYY"
+  if(!badges.length){
+    const lines=raw.split(/\n/);
+    const monthNames=/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/;
+    for(let i=1;i<lines.length;i++){
+      const line=lines[i].trim();
+      if(line.startsWith('Earned ')){
+        const dateStr=line.replace('Earned ','').trim();
+        const prevLine=lines[i-1].trim();
+        if(prevLine.length>5&&prevLine.length<160&&!seen.has(prevLine)){
+          seen.add(prevLine);
+          badges.push({name:prevLine,date:dateStr});
+        }
+      }
+    }
+  }
+
+  return {name,league,points,member_since:memberSince,badges};
+}
+
+// ── Main Actions ─────────────────────────────────────────────────────────────
+function parseInput(){
+  const raw=$('htmlInput').value.trim();
+  $('errorMsg').classList.remove('show');
+
+  if(!raw){
+    $('errorMsg').textContent='⚠️ กรุณา paste ข้อมูลจาก Google Skills profile ก่อน';
+    $('errorMsg').classList.add('show');
+    return;
+  }
+  if(raw.length<200){
+    $('errorMsg').textContent='⚠️ ข้อมูลดูสั้นเกินไป กรุณา copy ทั้งหน้า (Ctrl+A แล้ว Ctrl+C)';
+    $('errorMsg').classList.add('show');
+    return;
+  }
+
+  const profile=parseHTML(raw);
+
+  if(!profile.badges.length){
+    $('errorMsg').innerHTML='❌ ไม่พบข้อมูล badges<br><span style="font-size:11px;color:var(--text-dim)">ลอง View Page Source (Ctrl+U) แล้ว copy ทั้งหมดแทน</span>';
+    $('errorMsg').classList.add('show');
+    return;
+  }
+
+  renderDashboard(profile);
+  $('inputBox').style.display='none';
+  $('dashboard').classList.add('show');
+}
+
+function clearInput(){
+  $('htmlInput').value='';
+  $('errorMsg').classList.remove('show');
+}
+
+function resetDashboard(){
+  $('dashboard').classList.remove('show');
+  $('profileCard').classList.remove('show');
+  $('inputBox').style.display='block';
+  $('htmlInput').value='';
+  $('sections').innerHTML='';
+  earnedMap={};
+  // reset filter
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.fbtn').classList.add('active');
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderDashboard(profile){
+  earnedMap={};
+  profile.badges.forEach(b=>{earnedMap[b.name.toLowerCase().trim()]=b.date||'';});
+
+  $('pname').textContent=profile.name||'Unknown';
+  $('pmeta').textContent=`${profile.league||''} League · ${profile.points||'?'} points · Member since ${profile.member_since||'?'} · พบ ${profile.badges.length} badges ทั้งหมด`;
+  $('profileCard').classList.add('show');
+
+  let cTotal=0,cSkill=0;
+  profile.badges.forEach(b=>{
+    if(!inWindow(b.date)||!allChaiyo.has(b.name)) return;
+    cTotal++;
+    if(chaiyoSkills.has(b.name)) cSkill++;
+  });
+
+  const listTotal=allChaiyo.size;
+  $('st-total').textContent=listTotal;
+  $('st-earned').textContent=cTotal;
+  $('st-rem').textContent=listTotal-cTotal;
+  $('st-skill').textContent=cSkill;
+  const pct=Math.round(cTotal/listTotal*100);
+  $('gp-fill').style.width=pct+'%';
+  $('gp-pct').textContent=pct+'%';
+
+  renderSwag(cTotal,cSkill);
+  renderSections();
+}
+
+function renderSwag(ct,cs){
+  const c=$('swag-cards');c.innerHTML='';
+  [{label:'Tier 2 — Base Swag',prizes:['👕 T-shirt','💻 Laptop Sleeve','🎉 Stickers'],rT:8,rS:5},
+   {label:'Tier 1 — Top Swag', prizes:['👕 T-shirt','🎉 Stickers'],rT:15,rS:8}
+  ].forEach(t=>{
+    const tM=ct>=t.rT,sM=cs>=t.rS,ok=tM&&sM;
+    const pT=Math.min(100,Math.round(ct/t.rT*100));
+    const pS=Math.min(100,Math.round(cs/t.rS*100));
+    const d=document.createElement('div');
+    d.className=`swag-card ${ok?'unlocked':'locked'}`;
+    d.innerHTML=`
+      <div class="swag-top"><span class="spill">${t.label}</span><span>${ok?'🏆':'🔒'}</span></div>
+      <div class="prizes">${t.prizes.map(p=>`<span class="ptag">${p}</span>`).join('')}</div>
+      <div class="reqs">
+        <div class="rbox ${tM?'met':'unmet'}"><div class="rlabel">Total Badges</div><div class="rnums"><span class="rcur">${ct}</span><span class="rsep">/</span><span class="rtgt">${t.rT}</span></div><div class="mbar"><div class="mfill" style="width:${pT}%"></div></div></div>
+        <div class="rbox ${sM?'met':'unmet'}"><div class="rlabel">Skill Badges</div><div class="rnums"><span class="rcur">${cs}</span><span class="rsep">/</span><span class="rtgt">${t.rS}</span></div><div class="mbar"><div class="mfill" style="width:${pS}%"></div></div></div>
+      </div>
+      <div class="snote">★ นับเฉพาะ badge ใน list #ChaiyoGCP ที่ Earn ระหว่าง Mar 19 – Apr 12, 2026</div>
+      <div class="sdead"><span class="bdot"></span>Deadline: Apr 12, 2026 · 23:59 GMT+7</div>`;
+    c.appendChild(d);
+  });
+}
+
+function renderSections(){
+  const c=$('sections');c.innerHTML='';
+  badgeData.forEach((sec,si)=>{
+    const earned=sec.badges.filter(b=>earnedMap.hasOwnProperty(b.toLowerCase().trim()));
+    const el=document.createElement('div');
+    el.className='section';el.dataset.type=sec.type;
+    el.innerHTML=`<div class="shdr"><span class="stype ${sec.type}">${sec.type==='skill'?'Skill Badge':'Regular'}</span><span class="stitle">${sec.cat}</span><span class="scnt">${earned.length}/${sec.badges.length}</span></div><div class="bgrid" id="g${si}"></div>`;
+    c.appendChild(el);
+    const grid=el.querySelector(`#g${si}`);
+    sec.badges.forEach(name=>{
+      const k=name.toLowerCase().trim();
+      const done=earnedMap.hasOwnProperty(k);
+      const dateStr=done?earnedMap[k]:'';
+      const inC=allChaiyo.has(name);
+      const cE=done&&inWindow(dateStr)&&inC;
+      const item=document.createElement('div');
+      item.className=`bitem ${done?'earned':''} ${inC?'chaiyo':''}`;
+      item.dataset.type=sec.type;item.dataset.earned=done?'1':'0';item.dataset.chaiyo=inC?'1':'0';
+      item.innerHTML=`<div class="bchk">${done?'✓':''}</div><div class="binfo"><div class="bname">${name}</div>${done?`<div class="bdate">Earned ${dateStr}${cE?' ★':''}</div>`:''}</div>`;
+      grid.appendChild(item);
+    });
+  });
+}
+
+function filterBadges(mode,e){
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  if(e&&e.target) e.target.classList.add('active');
+  document.querySelectorAll('.section').forEach(sec=>{
+    const items=sec.querySelectorAll('.bitem');
+    let v=0;
+    items.forEach(item=>{
+      let show=true;
+      if(mode==='earned'&&item.dataset.earned!=='1') show=false;
+      if(mode==='todo'  &&item.dataset.earned!=='0') show=false;
+      if(mode==='skill' &&item.dataset.type!=='skill') show=false;
+      if(mode==='regular'&&item.dataset.type!=='regular') show=false;
+      if(mode==='chaiyo'&&item.dataset.chaiyo!=='1') show=false;
+      item.classList.toggle('hidden',!show);
+      if(show) v++;
+    });
+    sec.classList.toggle('hidden',v===0);
+  });
+}
+</script>
+</body>
+</html>
